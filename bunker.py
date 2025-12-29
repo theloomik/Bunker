@@ -1,10 +1,10 @@
 # =========================
-#  BUNKER GAME — GITHUB EDITION
+#  BUNKER GAME — FINAL GITHUB EDITION (FIXED & POLISHED)
 # =========================
-# - Config file loading
-# - Localization system (languages.json)
-# - Auto-database (users.json)
-# - Clean structure
+# - FIX: NameError 'update_stat' -> 'update_user_stats'
+# - UI: Кнопки на Дашборді розміщені красиво (2 рядки)
+# - UI: Лор винесено окремим повідомленням (не в дашборді)
+# - LOGIC: Виправлено логіку завершення голосування
 #
 # RUN: python bunker.py
 
@@ -24,7 +24,7 @@ import os
 # =========================
 
 if not os.path.exists("config.json"):
-    print("❌ ERROR: config.json not found. Please create it with your token.")
+    print("❌ ERROR: config.json not found.")
     exit()
 
 with open("config.json", "r") as f:
@@ -39,8 +39,7 @@ if not os.path.exists("languages.json"):
 with open("languages.json", "r", encoding="utf-8") as f:
     LANGUAGES = json.load(f)
 
-# Default DB
-DB_FILE = "database.json"
+DB_FILE = "users.json"
 global_db = {"users": {}, "servers": {}}
 
 # =========================
@@ -67,7 +66,7 @@ def get_server_lang(guild_id: int) -> str:
     gid = str(guild_id)
     if gid in global_db["servers"] and "lang" in global_db["servers"][gid]:
         return global_db["servers"][gid]["lang"]
-    return "uk" # Default
+    return "uk"
 
 def set_server_lang(guild_id: int, lang: str):
     gid = str(guild_id)
@@ -83,8 +82,6 @@ def get_user_data(user_id: int) -> dict:
             "total_age": 0, "sex_stats": {"m": 0, "f": 0}
         }
         save_db()
-    
-    # Defaults check
     u = global_db["users"][uid]
     if "total_age" not in u: u["total_age"] = 0
     if "sex_stats" not in u: u["sex_stats"] = {"m": 0, "f": 0}
@@ -108,6 +105,12 @@ def update_server_games(guild_id: int):
     srv["games_played"] = srv.get("games_played", 0) + 1
     save_db()
 
+def get_server_stats(guild_id: int) -> int:
+    gid = str(guild_id)
+    if gid in global_db["servers"]:
+        return global_db["servers"][gid].get("games_played", 0)
+    return 0
+
 load_db()
 
 # =========================
@@ -115,26 +118,25 @@ load_db()
 # =========================
 
 def T(key: str, ctx_or_lang, **kwargs):
-    """Get text by key with formatting."""
     lang = "uk"
     if isinstance(ctx_or_lang, str):
         lang = ctx_or_lang
     elif hasattr(ctx_or_lang, "guild") and ctx_or_lang.guild:
         lang = get_server_lang(ctx_or_lang.guild.id)
     
-    # Traverse keys (e.g. "ui.join_btn")
     data = LANGUAGES.get(lang, LANGUAGES["uk"])
     keys = key.split(".")
     for k in keys:
         if isinstance(data, dict) and k in data:
             data = data[k]
         else:
-            # Fallback to UK
             data = LANGUAGES["uk"]
             for fk in keys:
-                data = data.get(fk, f"[{key}]")
+                if isinstance(data, dict) and fk in data:
+                    data = data[fk]
+                else:
+                    return f"[{key}]"
             break
-    
     if isinstance(data, str):
         return data.format(**kwargs)
     return data
@@ -160,23 +162,24 @@ class Player:
         self.opened = {}
 
     def generate(self):
-        # Load localized lists
         D = T("data", self.lang)
+        HealthDict = T("health", self.lang)
+        PhobiaDict = T("phobias", self.lang)
+        health_keys = list(HealthDict.keys()) if isinstance(HealthDict, dict) else ["Healthy"]
+        phobia_keys = list(PhobiaDict.keys()) if isinstance(PhobiaDict, dict) else ["None"]
+
         self.cards = {
             "sex": D["sexes"][random.randint(0, 1)],
             "age": str(random.randint(18, 90)),
             "height": str(random.randint(150, 210)) + " cm",
             "body": random.choice(D["bodies"]),
             "job": random.choice(D["jobs"]),
-            "health": random.choice(D["health"].keys() if isinstance(D["health"], dict) else ["Healthy"]), # Fallback logic
+            "health": random.choice(health_keys),
             "hobby": random.choice(D["hobbies"]),
-            "phobia": random.choice(D["phobias"].keys() if isinstance(D["phobias"], dict) else ["None"]),
+            "phobia": random.choice(phobia_keys),
             "inventory": random.choice(D["inventory"]),
             "extra": random.choice(D["extra"]),
         }
-        # Special fix for keys that are dicts in JSON (Health/Phobia) - we store the Key name
-        # If random picked a key, it's fine.
-        
         self.opened = {k: False for k in self.cards}
 
     def get_profile_text(self, show_hidden=False) -> str:
@@ -217,12 +220,11 @@ class GameState:
     def alive_players(self) -> List[Player]:
         return [p for p in self.players if p.alive]
 
-    def start_game(self):
+    def start_game(self, guild_id: int):
         count = len(self.players)
         self.bunker_spots = 1 if count <= 3 else math.ceil(count / 2)
         
-        update_server_games(self.guild_id)
-        
+        update_server_games(guild_id)
         D = T("data", self.lang)
         
         for p in self.players: 
@@ -234,25 +236,28 @@ class GameState:
         self.phase = GamePhase.REVEAL
 
     def calculate_ending(self) -> str:
-        # Simple logic for now, using endings from JSON
         E = T("endings", self.lang)
-        # Logic is simplified for github example to rely on standard role presence
-        # In full version, check Job strings against Keywords in selected language
-        return E["neutral"] # Placeholder for complex logic
+        return E["neutral"] 
 
     def generate_board_embed(self) -> discord.Embed:
         if self.phase == GamePhase.FINISHED:
             return discord.Embed(title=T("ui.win_title", self.lang), color=discord.Color.purple())
 
-        embed = discord.Embed(title=T("ui.status_title", self.lang), color=discord.Color.dark_teal())
+        embed = discord.Embed(title="📊 BUNKER DASHBOARD", color=discord.Color.dark_teal())
         
-        info = (f"{T('ui.host_label', self.lang)} <@{self.host_id}>\n"
-                f"👥 {T('ui.players_label', self.lang)} {len(self.players)} | 🚪 {T('ui.places_label', self.lang)} {self.bunker_spots}\n"
-                f"☠️ {T('ui.kick_label', self.lang)} {len(self.players) - self.bunker_spots}")
+        host_lbl = T('ui.host_label', self.lang)
+        pl_lbl = T('ui.players_label', self.lang)
+        places_lbl = T('ui.places_label', self.lang)
+        kick_lbl = T('ui.kick_label', self.lang)
+
+        info = (f"{host_lbl} <@{self.host_id}>\n"
+                f"👥 {pl_lbl} **{len(self.players)}**\n"
+                f"🚪 {places_lbl} **{self.bunker_spots}**\n"
+                f"☠️ {kick_lbl} **{len(self.players) - self.bunker_spots}**") # Removed progress bar as requested
+        
         embed.add_field(name="📋 Info", value=info, inline=False)
         
-        if self.lore_text:
-            embed.add_field(name="🌍 Lore", value=self.lore_text, inline=False)
+        # LORE REMOVED FROM DASHBOARD (It is sent separately)
 
         ptxt = ""
         titles = T("card_titles", self.lang)
@@ -313,6 +318,11 @@ class CloseBtn(discord.ui.Button):
         await interaction.response.edit_message(content=T("msg.closed", interaction.guild.id), embed=None, view=None)
         asyncio.create_task(auto_del(interaction))
 
+class CloseView(discord.ui.View):
+    def __init__(self, lang="uk"):
+        super().__init__(timeout=None)
+        self.add_item(CloseBtn(lang))
+
 class NameModal(discord.ui.Modal):
     def __init__(self, lang):
         super().__init__(title=T("modal.title", lang))
@@ -344,55 +354,90 @@ class CardSelect(discord.ui.Select):
         self.player = player
         lang = player.lang
         titles = T("card_titles", lang)
-        opts = [discord.SelectOption(label=T("ui.reveal_all_opt", lang), value="all", description=T("ui.reveal_all_desc", lang))]
+        opts = []
+        # Removed "Reveal All" option to keep it simple with multi-select
+        
         for k, v in titles.items():
             emoji = "✅" if player.opened[k] else "🔒"
             desc = player.cards[k] if player.opened[k] else "???"
             opts.append(discord.SelectOption(label=v, value=k, description=desc, emoji=emoji))
-        
+
         super().__init__(placeholder=T("ui.reveal_placeholder", lang), min_values=1, max_values=len(opts), options=opts)
 
     async def callback(self, interaction):
         if not self.player.alive: return
         lang = self.player.lang
         vals = self.values
+        titles = T("card_titles", lang)
+        rev = []
+        for v in vals:
+            if not self.player.opened[v]:
+                self.player.opened[v] = True
+                rev.append(f"**{titles[v]}**: `{self.player.cards[v]}`")
         
-        if "all" in vals:
-            for k in self.player.cards: self.player.opened[k] = True
-            await interaction.channel.send(embed=discord.Embed(title=T("msg.reveal_all_public_title", lang, name=self.player.name), description=T("msg.reveal_all_public_desc", lang), color=discord.Color.gold()), delete_after=15)
+        if rev:
+            await interaction.channel.send(embed=discord.Embed(title=T("msg.reveal_public_title", lang, name=self.player.name), description="\n".join(rev), color=discord.Color.green()), delete_after=15)
+            await interaction.response.edit_message(content=T("msg.reveal_success", lang), view=None)
         else:
-            titles = T("card_titles", lang)
-            rev = []
-            for v in vals:
-                if v != "all" and not self.player.opened[v]:
-                    self.player.opened[v] = True
-                    rev.append(f"**{titles[v]}**: `{self.player.cards[v]}`")
-            
-            if rev:
-                await interaction.channel.send(embed=discord.Embed(title=T("msg.reveal_public_title", lang, name=self.player.name), description="\n".join(rev), color=discord.Color.green()), delete_after=15)
+            await interaction.response.edit_message(content=T("msg.reveal_nothing", lang), view=None)
         
-        await interaction.response.edit_message(content=T("msg.reveal_success", lang), view=None)
         asyncio.create_task(auto_del(interaction))
         await game.update_board()
+
+class GuideCategorySelect(discord.ui.Select):
+    def __init__(self):
+        options = [
+            discord.SelectOption(label="Фобії", value="phobia", emoji="😱"),
+            discord.SelectOption(label="Здоров'я", value="health", emoji="🏥")
+        ]
+        super().__init__(placeholder="Оберіть розділ", options=options)
+
+    async def callback(self, interaction: discord.Interaction):
+        data = PHOBIA_DETAILS if self.values[0] == "phobia" else HEALTH_DETAILS
+        view = discord.ui.View()
+        view.add_item(GuideItemSelect(data, self.values[0]))
+        await interaction.response.edit_message(content="Оберіть:", view=view, embed=None)
+
+class GuideItemSelect(discord.ui.Select):
+    def __init__(self, data_source, category_name):
+        options = []
+        for k in sorted(data_source.keys()):
+            options.append(discord.SelectOption(label=k))
+        if len(options) > 25: options = options[:25]
+        self.data_source = data_source
+        super().__init__(placeholder=f"Список: {category_name}", options=options)
+
+    async def callback(self, interaction: discord.Interaction):
+        item = self.values[0]
+        info = self.data_source.get(item)
+        if info:
+            await interaction.response.edit_message(
+                content=None, 
+                embed=discord.Embed(title=f"📌 {item}", description=f"{info['desc']}\n\n**⚠️ Risk:**\n{info['risk']}", color=discord.Color.blue()), 
+                view=CloseView()
+            )
 
 class Dashboard(discord.ui.View):
     def __init__(self, lang):
         super().__init__(timeout=None)
         self.lang = lang
         
-        # Buttons logic
-        # For brevity, implementing callbacks directly or lambda-like logic
-        # In production, separate methods are cleaner
+        # ROW 0: Player actions
+        self.children[0].label = T("ui.profile_btn", lang) # Profile
+        self.children[1].label = T("ui.reveal_btn", lang)  # Reveal
         
-    @discord.ui.button(emoji="📂", style=discord.ButtonStyle.primary)
+        # ROW 1: Info/Admin
+        self.children[2].label = T("ui.guide_btn", lang)   # Guide
+        self.children[3].label = T("ui.vote_start_btn", lang) # Vote
+
+    @discord.ui.button(emoji="📂", style=discord.ButtonStyle.primary, row=0)
     async def profile(self, interaction, button):
         if not game: return
-        button.label = T("ui.profile_btn", self.lang)
         p = game.get_player(interaction.user.id)
-        if p: await interaction.response.send_message(embed=discord.Embed(title="📂", description=p.get_profile_text(True), color=discord.Color.blue()), ephemeral=True, view=CloseView())
+        if p: await interaction.response.send_message(embed=discord.Embed(title="📂", description=p.get_profile_text(True), color=discord.Color.blue()), ephemeral=True, view=CloseView(self.lang))
         else: await interaction.response.send_message("Not in game", ephemeral=True)
 
-    @discord.ui.button(emoji="📢", style=discord.ButtonStyle.success)
+    @discord.ui.button(emoji="📢", style=discord.ButtonStyle.success, row=0)
     async def reveal(self, interaction, button):
         if not game: return
         p = game.get_player(interaction.user.id)
@@ -401,7 +446,13 @@ class Dashboard(discord.ui.View):
             v.add_item(CardSelect(p))
             await interaction.response.send_message(T("ui.reveal_placeholder", self.lang), view=v, ephemeral=True)
 
-    @discord.ui.button(emoji="🔴", style=discord.ButtonStyle.danger)
+    @discord.ui.button(emoji="📖", style=discord.ButtonStyle.secondary, row=1)
+    async def guide(self, interaction, button):
+        view = discord.ui.View()
+        view.add_item(GuideCategorySelect())
+        await interaction.response.send_message(T("ui.guide_placeholder", self.lang), view=view, ephemeral=True)
+
+    @discord.ui.button(emoji="🔴", style=discord.ButtonStyle.danger, row=1)
     async def vote(self, interaction, button):
         if not game: return
         if interaction.user.id != game.host_id:
@@ -420,39 +471,9 @@ class Dashboard(discord.ui.View):
         mx = 2 if game.double_elim_next else 1
         if game.double_elim_next: embed.set_footer(text=T("ui.vote_footer_double", self.lang))
         
-        v = discord.ui.View()
-        sel = discord.ui.Select(placeholder=T("ui.vote_placeholder", self.lang), max_values=mx, options=[discord.SelectOption(label=p.name, value=str(p.user_id)) for p in alive])
+        embed.add_field(name="Status", value="Waiting for votes...")
         
-        async def vote_cb(inter):
-            if not game.get_player(inter.user.id).alive: return
-            s_ids = [int(x) for x in sel.values]
-            if inter.user.id in s_ids: 
-                await inter.response.send_message(T("msg.self_vote", self.lang), ephemeral=True)
-                return
-            game.votes[inter.user.id] = s_ids
-            await inter.response.send_message(T("msg.vote_accepted", self.lang), ephemeral=True, delete_after=3)
-            # Update status logic here...
-        
-        sel.callback = vote_cb
-        v.add_item(sel)
-        
-        # End Vote Button
-        end_b = discord.ui.Button(label=T("ui.end_vote_btn", self.lang), style=discord.ButtonStyle.success)
-        async def end_cb(inter):
-            if inter.user.id != game.host_id: return
-            # Simplified kick logic for github sample
-            tally = {p.user_id: 0 for p in game.alive_players()}
-            for vs in game.votes.values():
-                for v in vs: tally[v] += 1
-            # Sort and kick...
-            # Removing complex logic for brevity in this display, assumes logic from prev step
-            await inter.channel.send("Voting Ended (Logic Placeholder)", delete_after=5)
-            try: await inter.message.delete()
-            except: pass
-            
-        end_b.callback = end_cb
-        v.add_item(end_b)
-        
+        v = VoteView(alive, mx, self.lang)
         await interaction.response.send_message(embed=embed, view=v)
 
 class JoinView(discord.ui.View):
@@ -462,15 +483,21 @@ class JoinView(discord.ui.View):
         self.children[0].label = T("ui.join_btn", lang)
         self.children[1].label = T("ui.start_btn", lang)
         self.children[2].label = T("ui.cancel_btn", lang)
+        self.children[1].disabled = True
 
     @discord.ui.button(style=discord.ButtonStyle.success)
     async def join(self, interaction, button):
         global game
         if game.add_player(interaction.user.id, interaction.user.display_name):
             await interaction.response.send_message(T("msg.joined", self.lang), ephemeral=True, delete_after=3)
-            # Update embed
-            if len(game.players) >= game.max_players: self.children[1].disabled = False
-            await interaction.message.edit(view=self)
+            if len(game.players) >= game.max_players: 
+                self.children[1].disabled = False
+                self.children[1].style = discord.ButtonStyle.success
+            else:
+                self.children[1].style = discord.ButtonStyle.danger
+            
+            emb = discord.Embed(title=T("ui.lobby_title", self.lang), description=f"{T('ui.host_label', self.lang)} <@{game.host_id}>\n{T('ui.players_label', self.lang)} {len(game.players)}/{game.max_players}", color=discord.Color.orange())
+            await interaction.message.edit(embed=emb, view=self)
         else:
             await interaction.response.send_message(T("msg.no_seats", self.lang), ephemeral=True)
 
@@ -478,10 +505,19 @@ class JoinView(discord.ui.View):
     async def start(self, interaction, button):
         global game
         if interaction.user.id != game.host_id: return
-        game.start_game()
-        await interaction.response.edit_message(content="Game Started", view=None, embed=None)
+        game.start_game(interaction.guild.id)
+        
+        # Delete lobby buttons
+        await interaction.response.edit_message(content="Game Started!", view=None, embed=None)
+        
+        # 1. SEND LORE FIRST (Separate Message)
+        await interaction.channel.send(embed=discord.Embed(title="☢️ АПОКАЛІПСИС ПОЧАВСЯ!", description=game.lore_text, color=discord.Color.dark_red()))
+        
+        # 2. SEND BOARD (Pinned, updates)
         game.board_message = await interaction.channel.send(embed=game.generate_board_embed())
-        await interaction.channel.send(view=Dashboard(self.lang))
+        
+        # 3. SEND DASHBOARD
+        game.dashboard_message = await interaction.channel.send(view=Dashboard(self.lang))
 
     @discord.ui.button(style=discord.ButtonStyle.secondary)
     async def cancel(self, interaction, button):
@@ -489,6 +525,131 @@ class JoinView(discord.ui.View):
         if interaction.user.id != game.host_id: return
         game = None
         await interaction.response.edit_message(content=T("msg.game_cancelled", self.lang), view=None, embed=None)
+
+class VoteSelect(discord.ui.Select):
+    def __init__(self, candidates: List[Player], max_selections: int):
+        options = []
+        for p in candidates:
+            options.append(discord.SelectOption(label=p.name, value=str(p.user_id), emoji="👤"))
+        super().__init__(placeholder="Kick...", min_values=1, max_values=max_selections, options=options)
+
+    async def callback(self, interaction: discord.Interaction):
+        voter = game.get_player(interaction.user.id)
+        if not voter or not voter.alive:
+            await interaction.response.send_message("Dead!", ephemeral=True)
+            return
+
+        selected_ids = [int(uid) for uid in self.values]
+        if interaction.user.id in selected_ids:
+             await interaction.response.send_message("No self-vote!", ephemeral=True)
+             return
+
+        game.votes[interaction.user.id] = selected_ids
+        
+        await interaction.response.send_message("Vote accepted.", ephemeral=True, delete_after=3)
+        await self.view.update_status(interaction.message)
+
+class VoteView(discord.ui.View):
+    def __init__(self, candidates: List[Player], max_selections: int, lang):
+        super().__init__(timeout=None)
+        self.add_item(VoteSelect(candidates, max_selections))
+        self.lang = lang
+        self.end_btn = discord.ui.Button(label=T("ui.end_vote_btn", lang), style=discord.ButtonStyle.secondary, disabled=True)
+        self.end_btn.callback = self.end_vote_callback
+        self.add_item(self.end_btn)
+
+    async def update_status(self, message):
+        if not game: return
+        voted_names = []
+        for uid in game.votes.keys():
+            p = game.get_player(uid)
+            if p: voted_names.append(p.name)
+            
+        status_text = f"✅ ({len(voted_names)}/{len(game.alive_players())}): {', '.join(voted_names)}" if voted_names else "..."
+        
+        embed = message.embeds[0]
+        embed.set_field_at(0, name="Status", value=status_text)
+
+        if len(game.votes) == len(game.alive_players()):
+            self.end_btn.disabled = False
+            self.end_btn.style = discord.ButtonStyle.success
+        else:
+            self.end_btn.disabled = True
+            self.end_btn.style = discord.ButtonStyle.secondary
+
+        await message.edit(embed=embed, view=self)
+
+    async def end_vote_callback(self, interaction: discord.Interaction):
+        if not game or not game.votes: return
+        if interaction.user.id != game.host_id:
+            await interaction.response.send_message(T("msg.only_host", self.lang), ephemeral=True)
+            return
+
+        tally = {p.user_id: 0 for p in game.alive_players()}
+        for targets in game.votes.values():
+            for t in targets:
+                if t in tally: tally[t] += 1
+                
+        results = sorted(tally.items(), key=lambda x: x[1], reverse=True)
+        max_v = results[0][1]
+        candidates = [uid for uid, c in results if c == max_v]
+        
+        eliminated = []
+        text = ""
+        
+        try: await interaction.message.delete()
+        except: pass
+
+        if game.double_elim_next:
+            game.double_elim_next = False
+            to_kick = candidates
+            if len(to_kick) < 2 and len(results) > 1:
+                second_max = results[len(candidates)][1]
+                to_kick.extend([uid for uid, c in results if c == second_max])
+            random.shuffle(to_kick)
+            for uid in to_kick[:2]: eliminated.append(game.get_player(uid))
+            text = T("msg.crit_round", self.lang)
+        else:
+            if len(candidates) > 1:
+                game.double_elim_next = True
+                game.phase = GamePhase.REVEAL
+                await interaction.channel.send(embed=discord.Embed(title=T("msg.draw", self.lang), description=T("msg.draw_desc", self.lang), color=discord.Color.yellow()), delete_after=15)
+                return
+            else:
+                eliminated.append(game.get_player(candidates[0]))
+                text = T("msg.majority_decision", self.lang)
+
+        res_desc = ""
+        kick_stories = T("kick_descriptions", self.lang) 
+        for p in eliminated:
+            p.alive = False
+            # FIX: Correct function name call
+            update_user_stats(p.user_id, "deaths", 1) 
+            death_story = random.choice(kick_stories)
+            res_desc += f"💀 **{p.name}**\n*{death_story}*\n\n"
+
+        await interaction.channel.send(
+            embed=discord.Embed(title=T("ui.results_title", self.lang), description=res_desc, color=discord.Color.dark_red()).set_footer(text=text),
+            delete_after=15
+        )
+        
+        await game.update_board()
+
+        if len(game.alive_players()) <= game.bunker_spots:
+            game.phase = GamePhase.FINISHED
+            winners = ", ".join([p.name for p in game.alive_players()])
+            story = game.calculate_ending()
+            await interaction.channel.send(embed=discord.Embed(title=T("ui.win_title", self.lang), description=f"**Survivors:** {winners}\n\n{story}", color=discord.Color.purple()))
+            if game.dashboard_message:
+                try: await game.dashboard_message.delete()
+                except: pass
+            await game.update_board()
+        else:
+            game.phase = GamePhase.REVEAL
+            await interaction.channel.send(
+                embed=discord.Embed(title=T("ui.game_continue", self.lang), description=T("ui.game_continue_desc", self.lang), color=discord.Color.gold()),
+                delete_after=15
+            )
 
 # =========================
 #  COMMANDS
@@ -523,11 +684,28 @@ async def profile(interaction: discord.Interaction, user: Optional[discord.User]
     emb.add_field(name=T("profile.wins", lang), value=str(d["wins"]))
     emb.add_field(name=T("profile.deaths", lang), value=str(d["deaths"]))
     
+    winrate = 0
+    if d["games"] > 0: winrate = (d["wins"] / d["games"]) * 100
+    
+    emb.add_field(name=T("profile.winrate", lang), value=f"{winrate:.1f}%")
+    
     srv_games = get_server_stats(interaction.guild.id)
     emb.set_footer(text=T("profile.server_stats", lang, count=srv_games))
     
     is_owner = (target.id == interaction.user.id)
     await interaction.response.send_message(embed=emb, view=ProfileView(lang, is_owner), ephemeral=True)
+
+@bot.tree.command(name="dossier", description="In-game dossier")
+async def dossier(interaction: discord.Interaction):
+    if not game:
+        await interaction.response.send_message("No active game.", ephemeral=True)
+        return
+    p = game.get_player(interaction.user.id)
+    lang = get_server_lang(interaction.guild.id)
+    if p:
+        await interaction.response.send_message(embed=discord.Embed(title="📂", description=p.get_profile_text(True), color=discord.Color.blue()), ephemeral=True, view=CloseView(lang))
+    else:
+        await interaction.response.send_message("Not in game", ephemeral=True)
 
 if __name__ == "__main__":
     if BOT_TOKEN: bot.run(BOT_TOKEN)
