@@ -1,192 +1,141 @@
-☢️ BUNKER — Discord Game Bot
+# ☢️ Bunker Discord Bot
 
-BUNKER is an interactive Discord game bot based on the social survival board game “Bunker”.
-Players receive unique characters, reveal information step by step, debate, vote, and decide who will survive and enter the bunker.
+Bunker is a feature-rich, fully interactive Discord bot that facilitates the popular social deduction board game "The Bunker" (also known as Lifeboat).
 
-This bot is designed as a full game experience, not just a command-based bot.
+Players are generated with random characteristics (Job, Health, Phobia, Inventory, etc.) and must survive an apocalypse. The catch? The bunker has limited spots. Convince others that you are useful, reveal your traits strategically, and vote to decide who gets left behind.
 
-🎮 Core Concept
+## ✨ Key Features
 
-A global catastrophe has destroyed the world.
+🎮 **Interactive UI:** No more command spam! The game is controlled entirely via Buttons and Dropdown Menus (Selects).
 
-A bunker can save only a limited number of people.
-Each player has a randomly generated character with strengths and weaknesses.
+📊 **Live Dashboard:** A pinned message that updates in real-time, showing the bunker status, lore, and living players.
 
-Through discussion, strategy, and voting, players must decide:
+👑 **Host System:** The player who creates the lobby becomes the Host, managing the game flow (Start, Voting, Cancellation).
 
-Who deserves to survive
+🌍 **Multi-Language Support:** Fully localized (currently supports English and Ukrainian). Easy to add new languages via languages.json.
 
-Who must be excluded
+💾 **Persistence & Stats:**  Global player profiles with stats (Games, Wins, Deaths, Winrate).
 
-The game continues until only the required number of survivors remains.
 
-✨ Key Features
-🔘 Button-Based Gameplay
+## 🧠 Smart Game Logic:
 
-No command spam
+Lore Generation: Random catastrophes, bunker types, and conditions every game.
 
-No confusing syntax
+Voting System: Includes double elimination logic for draws.
 
-Almost all actions are handled via interactive buttons
+Endings: The bot analyzes the surviving team (Doctors, Engineers, Military) and writes a story conclusion.
 
-One dynamic game board message that updates in real time
+## 🛠️ Installation
 
-👑 Host / Curator System
+Prerequisites
 
-The player who creates the game becomes the Host
+Python 3.9 or higher
 
-Only the Host can:
+A Discord Bot Token (from Discord Developer Portal)
 
-start the game
+Setup Steps
 
-control voting phases
+Clone the repository:
 
-end or reset the game
+```
+git clone https://github.com/LooMik4332/bunker.git
+cd bunker
+```
 
-Prevents chaos and keeps the game structured
+Install dependencies:
 
-🧍 Player Profiles
+```
+pip install discord.py
+```
 
-Each player has a unique character with attributes such as:
+Configure the bot:
+Create a file named config.json in the root folder and paste your token:
 
-Gender
+```
+{
+    "token": "YOUR_DISCORD_BOT_TOKEN_HERE"
+}
+```
 
-Age
+Run the bot:
 
-Body type
+```
+python bunker.py
+```
 
-Profession & experience
+## 🚀 How to Play
 
-Health condition
+### **1. Lobby**
 
-Phobia
+Use /create [players] to open a lobby.
 
-Hobbies
 
-Inventory
+<img width="298" height="106" alt="зображення" src="https://github.com/user-attachments/assets/83fd74c6-60f1-43b6-84c8-0ecb6667f408" />
 
-Extra traits
+Users click Join.
 
-Profiles are private and can be viewed using /profile.
 
-Players can also set a custom in-game name, which is used instead of their Discord nickname.
+<img width="332" height="227" alt="зображення" src="https://github.com/user-attachments/assets/31c415af-650a-441d-958a-2b5b249f7327" />
 
-📇 Card Reveal System
+The Host clicks Start Game once the lobby is full.
 
-Players decide which cards to reveal and when
 
-Cards are revealed via buttons
+<img width="358" height="225" alt="зображення" src="https://github.com/user-attachments/assets/7cbcaf05-a7ee-437e-8cc6-2a67d9054a26" />
 
-Revealed information is visible to everyone
 
-Unrevealed information remains secret
+### **2. The Game**
 
-This creates tension and strategic decision-making.
+<img width="276" height="504" alt="зображення" src="https://github.com/user-attachments/assets/3f6e8a5c-c668-4c77-a0cf-3b8e95aec5bc" />
 
-🗳️ Advanced Voting System
 
-Voting is fully automated
+Dashboard: A persistent message appears with buttons:
 
-Players cannot vote for themselves
+📂 **My Profile:** Check your secret stats (Ephemerally).
 
-Eliminated players cannot vote
+📢 **Reveal:** Show specific cards to everyone.
 
-Tie logic:
+📖 **Guide:** Read about specific traits/diseases.
 
-First tie → nobody is eliminated
+🔴 **Start Vote (Host only).**
 
-Next round → double elimination
+**Gameplay:** Players discuss, reveal traits, and argue their case.
 
-Voting results are calculated automatically
+### **3. Voting**
 
-☢️ Bunker Lore System
+The Host starts the vote via the Dashboard.
 
-Each game starts with a randomly generated scenario, such as:
+Players select who to exile via a Dropdown menu.
 
-Type of global catastrophe
+If there is a draw, a Double Elimination round occurs next.
 
-Condition of the bunker
+### **4. Ending**
 
-Duration of survival
+When the number of survivors matches the bunker spots, the game ends.
 
-Available resources
+The bot generates an ending story based on the professions and health status of the survivors.
 
-This adds atmosphere and affects how players argue their usefulness.
+## 📂 Project Structure
 
-🧠 Game Phases
+bunker.py - The main bot logic (Game loop, UI, Commands).
 
-The game progresses through clear phases:
+languages.json - Localization file containing all text strings, game data (jobs, phobias), and lore.
 
-Lobby (players join)
+users.json - Auto-generated database for player stats.
 
-Character generation
+config.json - Configuration file for the bot token (needs to be created).
 
-Information reveal
+## 🌍 Adding a Language
 
-Voting rounds
+Open languages.json.
 
-Final survivors & ending
+Copy the "en" block.
 
-Each phase restricts available actions to prevent exploits.
+Paste it as a new key (e.g., "es" for Spanish).
 
-🧾 Commands
+Translate the values.
 
-Only two slash commands exist:
+The bot will automatically detect the new language in the /language command!
 
-/create
+## 🤝 Contributing
 
-Creates a new game
-
-Assigns the Host
-
-Starts the lobby phase
-
-/profile
-
-Shows your private character profile
-
-Allows setting a custom in-game name
-
-Displays player statistics
-
-Everything else is handled via buttons.
-
-🛠️ Technical Notes
-
-Written in Python using discord.py
-
-Clean, readable architecture
-
-Game logic separated from Discord UI logic
-
-Single-file structure (by design, easy to refactor later)
-
-Designed for stability and extensibility
-
-🚀 Planned / Optional Enhancements
-
-Expanded lore with gameplay impact
-
-Random events between rounds
-
-Deeper explanations for traits (phobias, body types, health)
-
-Post-game story / epilogue
-
-Persistent player statistics
-
-Public bot release
-
-🏁 Project Status
-
-✔ Fully playable
-✔ Stable core mechanics
-✔ Clean UI & UX
-✔ Designed for real players
-
-This project is not a prototype — it is a complete game with room for growth.
-
-📜 License
-
-Private project (for now).
-Public release may follow in the future.
+Contributions, issues, and feature requests are welcome! Feel free to check the issues page.
