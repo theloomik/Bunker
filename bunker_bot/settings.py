@@ -2,6 +2,7 @@ import os
 import json
 import logging
 from logging.handlers import RotatingFileHandler
+import discord
 
 # =========================
 #  LOGGING SETUP
@@ -48,10 +49,24 @@ LANG_FILE = "languages.json"
 # Timeouts (in seconds)
 LOBBY_TIMEOUT = 3600        # 1 hour
 DASHBOARD_TIMEOUT = 7200    # 2 hours
-VOTE_TIMEOUT = 600          # 10 minutes
+VOTE_TIMEOUT = 900          # 15 minutes (Increased for better UX)
 EPHEMERAL_VIEW_TIMEOUT = 180 # 3 minutes
 
 # Message Lifetimes (in seconds)
 BRIEF_MSG_LIFETIME = 3
 ANNOUNCEMENT_LIFETIME = 15
 RESULT_MSG_LIFETIME = 20
+
+# =========================
+#  THEME / COLORS
+# =========================
+class EmbedColors:
+    LOBBY = discord.Color.orange()
+    GAME_INFO = discord.Color.dark_teal()
+    VOTING = discord.Color.gold()
+    ELIMINATION = discord.Color.dark_red()
+    VICTORY = discord.Color.purple()
+    SUCCESS = discord.Color.green()
+    ERROR = discord.Color.red()
+    INFO = discord.Color.blue()
+    INTRO = discord.Color.dark_red()

@@ -1,6 +1,12 @@
 {
     "uk": {
         "name": "Українська",
+        "phases": {
+            "waiting": "Очікування",
+            "reveal": "Відкриття",
+            "voting": "Голосування",
+            "finished": "Фінал"
+        },
         "ui": {
             "join_btn": "Приєднатися",
             "start_btn": "Почати гру",
@@ -114,6 +120,12 @@
     },
     "en": {
         "name": "English",
+        "phases": {
+            "waiting": "Waiting",
+            "reveal": "Reveal",
+            "voting": "Voting",
+            "finished": "Finished"
+        },
         "ui": {
             "join_btn": "Join",
             "start_btn": "Start Game",
@@ -144,11 +156,6 @@
             "game_continue_desc": "Keep revealing cards.",
             "results_title": "🚪 RESULTS"
         },
-        "guide": {
-            "phobia_label": "Phobias",
-            "health_label": "Health",
-            "select_category": "Select Category"
-        },
         "msg": {
             "joined": "You joined!",
             "no_seats": "No seats left.",
@@ -172,6 +179,11 @@
             "majority_decision": "Decision made.",
             "lang_changed": "✅ Language: **English**",
             "game_over_clean": "Game over."
+        },
+        "guide": {
+            "phobia_label": "Phobias",
+            "health_label": "Health",
+            "select_category": "Select Category"
         },
         "card_titles": {
             "sex": "Sex", "age": "Age", "height": "Height", "body": "Body",

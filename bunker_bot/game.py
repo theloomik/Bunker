@@ -1,17 +1,32 @@
 import random
 import asyncio
 import discord
+from discord.ext import commands
 from enum import Enum, auto
 from typing import Dict, List, Optional, Tuple, Any
 import logging
 import math
+import os
 
-from .settings import logger, GAME_DB_FILE
+from .settings import logger, GAME_DB_FILE, EmbedColors
 from .i18n import T
 from .database import get_user_data, update_user_stats, update_server_games, save_raw_active_games
 
 # Global games registry: {guild_id: GameState}
+# Protected by _games_lock for thread safety
 games: Dict[int, 'GameState'] = {}
+_games_lock = asyncio.Lock()
+
+# --- Safe Accessors ---
+async def get_game(guild_id: int) -> Optional['GameState']:
+    """Thread-safe retrieval of a game instance."""
+    async with _games_lock:
+        return games.get(guild_id)
+
+async def set_game(guild_id: int, game: 'GameState') -> None:
+    """Thread-safe assignment of a game instance."""
+    async with _games_lock:
+        games[guild_id] = game
 
 class SaveManager:
     """
@@ -25,35 +40,34 @@ class SaveManager:
     async def request(cls) -> None:
         """Schedules a save operation in the near future (Debounce).
         
-        If a save is already scheduled, this call returns immediately to group
-        multiple updates into a single write operation.
+        This method uses a lock to ensure thread safety when checking and setting
+        the schedule flag, preventing multiple concurrent saves.
         """
-        if cls._save_scheduled:
-            return
+        async with cls._lock:
+            if cls._save_scheduled:
+                return
+            cls._save_scheduled = True
         
-        cls._save_scheduled = True
-        # Wait a bit to collect concurrent updates (e.g. rapid voting)
+        # Debounce delay outside the lock to allow other tasks to run
         await asyncio.sleep(2.0)
         
         await cls.force()
-        cls._save_scheduled = False
+        
+        async with cls._lock:
+            cls._save_scheduled = False
 
     @classmethod
     async def force(cls) -> None:
-        """Immediately serializes and saves all active games to disk.
-        
-        This method uses a lock to ensure thread safety during the write operation.
-        """
+        """Immediately serializes and saves all active games to disk."""
         async with cls._lock:
-            # 1. Serialize Synchronously (Atomic operation in asyncio)
-            # This prevents state from mutating while we are preparing data
             try:
-                data = {str(gid): game.to_dict() for gid, game in games.items()}
+                # Protect iteration over games dict
+                async with _games_lock:
+                    data = {str(gid): game.to_dict() for gid, game in games.items()}
             except Exception as e:
                 logger.error(f"Serialization Error in SaveManager: {e}")
                 return
 
-            # 2. Write Asynchronously (Thread-safe via database.py)
             await save_raw_active_games(data)
 
 class GamePhase(Enum):
@@ -206,9 +220,13 @@ class GameState:
         if len(self.players) >= self.max_players: return False
         if any(p.user_id == user_id for p in self.players): return False
         
-        self.players.append(Player(user_id, name, self.lang))
-        logger.debug(f"Player {user_id} added to game in guild {self.guild_id}")
+        # Security: Sanitize name to prevent exploits
+        safe_name = discord.utils.escape_mentions(name)
+        safe_name = discord.utils.escape_markdown(safe_name)
+        safe_name = safe_name[:20] # Enforce length limit
         
+        self.players.append(Player(user_id, safe_name, self.lang))
+        # Request save instead of saving immediately
         asyncio.create_task(SaveManager.request())
         return True
 
@@ -228,8 +246,7 @@ class GameState:
         
         for p in self.players: 
             p.generate()
-            sex_idx = 0 if p.cards['sex'] == D["sexes"][0] else 1
-            await update_user_stats(p.user_id, "game_start", {"age": int(p.cards['age']), "sex_idx": sex_idx})
+            # Stats update moved to end_game
         
         self.lore_text = f"{random.choice(D['catastrophes'])}\n\n**Loc**: {random.choice(D['bunker_types'])}\n**Cond**: {random.choice(D['supplies'])}\n⏳ {random.choice(D['durations'])}"
         self.phase = GamePhase.REVEAL
@@ -239,10 +256,8 @@ class GameState:
         logger.info(f"Ending game in guild {self.guild_id}")
         self.phase = GamePhase.FINISHED
         
-        if self.dashboard_view:
-            self.dashboard_view.stop()
-        if self.join_view:
-            self.join_view.stop()
+        if self.dashboard_view: self.dashboard_view.stop()
+        if self.join_view: self.join_view.stop()
 
         if self.channel_id:
             try:
@@ -252,7 +267,6 @@ class GameState:
                     except: pass
                 
                 if ch:
-                    # Clean Dashboard
                     if self.dash_msg_id:
                         try:
                             msg = await ch.fetch_message(self.dash_msg_id)
@@ -263,7 +277,6 @@ class GameState:
                             else: logger.error(f"Guild {self.guild_id}: HTTP error deleting dashboard: {e}")
                         except Exception as e: logger.error(f"Guild {self.guild_id}: Unexpected error cleaning dashboard: {e}")
                     
-                    # Clean Status Board
                     if self.board_msg_id:
                         try:
                             msg = await ch.fetch_message(self.board_msg_id)
@@ -274,7 +287,7 @@ class GameState:
                             else: logger.error(f"Guild {self.guild_id}: HTTP error deleting board: {e}")
                         except Exception as e: logger.error(f"Guild {self.guild_id}: Unexpected error cleaning board: {e}")
             except Exception as e:
-                logger.warning(f"Guild {self.guild_id}: Channel cleanup error (channel likely missing): {e}")
+                logger.warning(f"Guild {self.guild_id}: Channel cleanup error: {e}")
         
         self.players.clear()
         self.votes.clear()
@@ -282,23 +295,43 @@ class GameState:
         self.dashboard_view = None
         self.join_view = None
 
-        if self.guild_id in games:
-            del games[self.guild_id]
-            asyncio.create_task(SaveManager.force())
+        # Thread-safe removal from global games
+        async with _games_lock:
+            if self.guild_id in games:
+                del games[self.guild_id]
+        
+        asyncio.create_task(SaveManager.force())
 
-    async def register_vote(self, user_id: int, targets: List[int]) -> None:
+    async def register_vote(self, user_id: int, targets: List[int]) -> bool:
+        """Registers a vote with validation."""
+        voter = self.get_player(user_id)
+        if not voter or not voter.alive:
+            raise ValueError("Dead players cannot vote.")
+        
+        for target_id in targets:
+            if target_id == user_id:
+                raise ValueError("Self-voting is not allowed.")
+            target = self.get_player(target_id)
+            if not target or not target.alive:
+                raise ValueError("Cannot vote for dead players.")
+
         self.votes[user_id] = [int(t) for t in targets]
-        logger.debug(f"User {user_id} voted in guild {self.guild_id}")
         asyncio.create_task(SaveManager.request())
+        return True
 
     def resolve_votes(self) -> Tuple[List[Player], str, bool]:
         alive_ids = {p.user_id for p in self.alive_players()}
+        # Filter votes from dead people
         active_votes = {k: v for k, v in self.votes.items() if k in alive_ids}
 
         tally = {uid: 0 for uid in alive_ids}
         for vs in active_votes.values():
             for v in vs: 
-                if v in tally: tally[v] += 1
+                # Strict check: only count votes for ALIVE targets
+                if v in tally: 
+                    tally[v] += 1
+                else:
+                    logger.warning(f"Guild {self.guild_id}: Vote for invalid/dead target {v} ignored.")
         
         results = sorted(tally.items(), key=lambda x: x[1], reverse=True)
         if not results: return [], "No votes", False
@@ -312,6 +345,7 @@ class GameState:
 
         if self.double_elim_next:
             self.double_elim_next = False
+            # Logic: Select 2 candidates
             to_kick = list(candidates)
             if len(to_kick) < 2 and len(results) > len(to_kick):
                 second_max = results[len(to_kick)][1]
@@ -343,7 +377,7 @@ class GameState:
 
     def generate_board_embed(self) -> discord.Embed:
         if self.phase == GamePhase.FINISHED:
-            return discord.Embed(title=T("ui.win_title", self.lang), color=discord.Color.purple())
+            return discord.Embed(title=T("ui.win_title", self.lang), color=EmbedColors.VICTORY)
 
         embed = discord.Embed(title="📊 BUNKER DASHBOARD", color=discord.Color.dark_teal())
         
@@ -417,7 +451,7 @@ class GameState:
             except Exception as e:
                 logger.error(f"Guild {self.guild_id}: Edit error in update_board: {e}")
 
-# --- Exposed functions ---
+# --- Exposed functions to replace old direct calls ---
 async def save_active_games() -> None:
     await SaveManager.request()
 
@@ -431,18 +465,17 @@ async def load_active_games_from_disk() -> None:
     try:
         from .database import load_raw_active_games
         data = await load_raw_active_games()
-        recovered = 0
         for gid_str, g_data in data.items():
             gid = int(gid_str)
             try:
                 game = GameState.from_dict(gid, g_data)
+                # Validation Step
                 if game.validate():
-                    games[gid] = game
-                    recovered += 1
+                    async with _games_lock:
+                        games[gid] = game
                 else:
                     logger.warning(f"Skipping corrupted game state for guild {gid}")
             except Exception as e:
                 logger.error(f"Failed to recover game {gid}: {e}")
-        logger.info(f"Recovered {recovered} games from disk.")
     except Exception as e:
         logger.error(f"Game Load Error: {e}")
