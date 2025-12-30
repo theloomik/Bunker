@@ -31,6 +31,11 @@
             "game_continue_desc": "Продовжуйте гру.",
             "results_title": "🚪 РЕЗУЛЬТАТИ"
         },
+        "guide": {
+            "phobia_label": "Фобії",
+            "health_label": "Здоров'я",
+            "select_category": "Оберіть категорію"
+        },
         "msg": {
             "joined": "Ви приєдналися!",
             "no_seats": "Немає місць.",
@@ -54,11 +59,6 @@
             "majority_decision": "Більшість вирішила.",
             "lang_changed": "✅ Мову змінено на: **Українська**",
             "game_over_clean": "Гру завершено. Створено нову сесію."
-        },
-        "guide": {
-            "phobia_label": "Фобії",
-            "health_label": "Здоров'я",
-            "select_category": "Оберіть категорію"
         },
         "card_titles": {
             "sex": "Стать", "age": "Вік", "height": "Зріст", "body": "Тіло",
@@ -144,6 +144,11 @@
             "game_continue_desc": "Keep revealing cards.",
             "results_title": "🚪 RESULTS"
         },
+        "guide": {
+            "phobia_label": "Phobias",
+            "health_label": "Health",
+            "select_category": "Select Category"
+        },
         "msg": {
             "joined": "You joined!",
             "no_seats": "No seats left.",
@@ -167,11 +172,6 @@
             "majority_decision": "Decision made.",
             "lang_changed": "✅ Language: **English**",
             "game_over_clean": "Game over."
-        },
-        "guide": {
-            "phobia_label": "Phobias",
-            "health_label": "Health",
-            "select_category": "Select Category"
         },
         "card_titles": {
             "sex": "Sex", "age": "Age", "height": "Height", "body": "Body",

@@ -27,17 +27,14 @@ logger = setup_logging()
 #  CONFIG LOADER
 # =========================
 if not os.path.exists("config.json"):
-    # Fallback/Create default if missing to prevent immediate crash during dev
     with open("config.json", "w") as f:
         json.dump({"token": ""}, f)
-    logger.warning("config.json created. Please fill in the token.")
 
 with open("config.json", "r") as f:
     try:
         CONFIG = json.load(f)
     except json.JSONDecodeError:
         CONFIG = {}
-        logger.critical("config.json is invalid JSON.")
 
 BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN") or CONFIG.get("token")
 
@@ -47,3 +44,14 @@ BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN") or CONFIG.get("token")
 DB_FILE = "users.json"
 GAME_DB_FILE = "active_games.json"
 LANG_FILE = "languages.json"
+
+# Timeouts (in seconds)
+LOBBY_TIMEOUT = 3600        # 1 hour
+DASHBOARD_TIMEOUT = 7200    # 2 hours
+VOTE_TIMEOUT = 600          # 10 minutes
+EPHEMERAL_VIEW_TIMEOUT = 180 # 3 minutes
+
+# Message Lifetimes (in seconds)
+BRIEF_MSG_LIFETIME = 3
+ANNOUNCEMENT_LIFETIME = 15
+RESULT_MSG_LIFETIME = 20

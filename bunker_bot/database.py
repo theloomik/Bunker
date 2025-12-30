@@ -1,12 +1,15 @@
 import json
 import os
 import asyncio
-from .settings import logger, DB_FILE
+from .settings import logger, DB_FILE, GAME_DB_FILE
 
 _user_db_lock = asyncio.Lock()
+_game_db_lock = asyncio.Lock()
 
-# In-memory cache
+# In-memory cache for users
 global_db = {"users": {}, "servers": {}}
+
+# --- USER STATS OPERATIONS ---
 
 async def load_user_db():
     global global_db
@@ -20,8 +23,6 @@ async def load_user_db():
                 with open(DB_FILE, "r", encoding="utf-8") as f:
                     return json.load(f)
             data = await asyncio.to_thread(read)
-            
-            # Migration check
             if "users" not in data: 
                 global_db = {"users": data, "servers": {}}
             else:
@@ -41,7 +42,36 @@ async def save_user_db_data(data):
     except Exception as e:
         logger.error(f"User DB Write Error: {e}")
 
-# --- Synchronous Accessors (reading from cache) ---
+# --- ACTIVE GAMES OPERATIONS (RAW JSON) ---
+
+async def save_raw_active_games(data_dict: dict):
+    """Saves the dictionary of active games to JSON file."""
+    try:
+        async with _game_db_lock:
+            def write():
+                with open(GAME_DB_FILE, "w", encoding="utf-8") as f:
+                    json.dump(data_dict, f, ensure_ascii=False, indent=4)
+            await asyncio.to_thread(write)
+    except Exception as e:
+        logger.error(f"Game DB Save Error: {e}")
+
+async def load_raw_active_games() -> dict:
+    """Loads raw JSON data for active games."""
+    if not os.path.exists(GAME_DB_FILE):
+        return {}
+    
+    try:
+        async with _game_db_lock:
+            def read():
+                with open(GAME_DB_FILE, "r", encoding="utf-8") as f:
+                    return json.load(f)
+            return await asyncio.to_thread(read)
+    except Exception as e:
+        logger.error(f"Game DB Load Error: {e}")
+        return {}
+
+# --- ACCESSORS ---
+
 def get_server_lang(guild_id: int) -> str:
     gid = str(guild_id)
     return global_db["servers"].get(gid, {}).get("lang", "uk")
@@ -58,12 +88,10 @@ def get_user_data(user_id: int) -> dict:
             "total_age": 0, "sex_stats": {"m": 0, "f": 0}
         }
     u = global_db["users"][uid]
-    # Ensure keys exist
     if "total_age" not in u: u["total_age"] = 0
     if "sex_stats" not in u: u["sex_stats"] = {"m": 0, "f": 0}
     return u
 
-# --- Async Modifiers (writing to disk) ---
 async def set_server_lang(guild_id: int, lang: str):
     gid = str(guild_id)
     if gid not in global_db["servers"]: global_db["servers"][gid] = {}
@@ -79,6 +107,15 @@ async def update_user_stats(user_id: int, key: str, val=1):
         u["sex_stats"][sex_key] += 1
     elif key in u:
         u[key] += val
+    await save_user_db_data(global_db)
+
+async def reset_user_stats(user_id: int):
+    u = get_user_data(user_id)
+    u["games"] = 0
+    u["wins"] = 0
+    u["deaths"] = 0
+    u["total_age"] = 0
+    u["sex_stats"] = {"m": 0, "f": 0}
     await save_user_db_data(global_db)
 
 async def update_server_games(guild_id: int):
