@@ -13,7 +13,7 @@ Setup Steps
 
 Clone the repository:
 
-git clone https://github.com/LooMik4332/bunker.git
+git clone https://github.com/theloomik/bunker.git
 cd bunker
 
 Install dependencies:
