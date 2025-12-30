@@ -6,3 +6,5 @@ active_games.json
 bunker.log
 pycache/
 *.pyc
+users.json.backup
+active_games.json.backup
