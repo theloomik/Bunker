@@ -1,3 +1,8 @@
 config.json
-database.json
+.env
 users.json
+active_games.json
+*.log
+bunker.log
+pycache/
+*.pyc
