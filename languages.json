@@ -2,16 +2,16 @@
     "uk": {
         "name": "Українська",
         "phases": {
-            "waiting": "Очікування",
-            "reveal": "Відкриття",
-            "voting": "Голосування",
-            "finished": "Фінал"
+            "waiting": "⌛ Очікування",
+            "reveal": "📢 Фаза Відкриття",
+            "voting": "🗳️ Фаза Голосування",
+            "finished": "🏁 Фінал"
         },
         "ui": {
             "join_btn": "Приєднатися",
             "start_btn": "Почати гру",
             "cancel_btn": "Скасувати",
-            "vote_start_btn": "Почати голосування",
+            "vote_start_btn": "👑 Почати голосування",
             "end_vote_btn": "ЗАВЕРШИТИ ГОЛОСУВАННЯ",
             "profile_btn": "Мій профіль",
             "reveal_btn": "Відкрити карту",
@@ -21,26 +21,21 @@
             "lobby_title": "☢️ Бункер: Лобі",
             "host_label": "👑 **Хост:**",
             "players_label": "Гравців:",
-            "places_label": "Місць:",
-            "kick_label": "За бортом:",
+            "places_label": "✅ Безпечних місць:",
+            "kick_label": "❌ Треба вигнати:",
             "status_title": "📊 СТАТУС БУНКЕРА",
             "vote_title": "🗳️ ЧАС ВИГНАННЯ",
             "vote_desc": "Оберіть, хто покине бункер.",
-            "vote_footer_double": "⚠️ ПОДВІЙНИЙ ВИБІР!",
+            "vote_footer_double": "⚠️ ПОДВІЙНИЙ ВИЛІТ: Оберіть 2 гравців!",
             "vote_placeholder": "Оберіть, кого вигнати...",
             "reveal_placeholder": "Що відкрити?",
             "guide_placeholder": "Оберіть розділ",
             "reveal_all_opt": "⚠️ ВІДКРИТИ ВСЕ (Ва-банк)",
-            "reveal_all_desc": "Розкрити всі карти одразу",
-            "win_title": "🎉 ФІНАЛ ГРИ",
+            "reveal_all_desc": "Розкрити всі характеристики",
+            "win_title": "🎉 ПЕРЕМОГА!",
             "game_continue": "⚠️ ГРА ТРИВАЄ",
-            "game_continue_desc": "Продовжуйте гру.",
+            "game_continue_desc": "Продовжуйте розкривати карти.",
             "results_title": "🚪 РЕЗУЛЬТАТИ"
-        },
-        "guide": {
-            "phobia_label": "Фобії",
-            "health_label": "Здоров'я",
-            "select_category": "Оберіть категорію"
         },
         "msg": {
             "joined": "Ви приєдналися!",
@@ -48,21 +43,21 @@
             "game_started": "Гра вже почалась.",
             "game_cancelled": "❌ Гру скасовано Хостом.",
             "only_host": "❌ **Тільки Хост може це зробити!**",
-            "dead_vote": "Мертві не голосують!",
+            "dead_vote": "💀 Ви у вигнанні. Вашого голосу більше не чутно.",
             "self_vote": "Не можна голосувати проти себе!",
             "vote_accepted": "✅ Ваш голос зараховано.",
-            "reveal_success": "✅ Ви успішно відкрили обрані карти.",
+            "reveal_success": "✅ Карти відкрито. Ваша нова досьє оновлена.",
             "reveal_nothing": "Ви нічого нового не відкрили.",
             "reveal_all_alert": "📢 **Ви розкрили ВСІ свої карти!**",
-            "reveal_public_title": "📢 {name} відкриває карти",
+            "reveal_public_title": "📢 {name} відкриває",
             "reveal_all_public_title": "📢 {name} йде ва-банк!",
             "reveal_all_public_desc": "Гравець розкрив **УСІ** свої характеристики!",
             "name_changed": "✅ Тепер вас звати: **{name}**",
             "closed": "❌ Закрито.",
             "draw": "⚖️ НІЧИЯ!",
-            "draw_desc": "Голоси розділилися. Ніхто не йде.\n\n🛑 **НАСТУПНИЙ РАУНД — ПОДВІЙНИЙ ВИЛІТ!**",
-            "crit_round": "⚠️ **Критичний раунд.** Вибуло двоє.",
-            "majority_decision": "Більшість вирішила.",
+            "draw_desc": "⚖️ Голоси розділилися. Ніхто не йде.\n\n⚠️ **Подвійне вигнання: Наступного разу вибудуть двоє, щоб розбити нічию!**",
+            "crit_round": "⚖️ Тай-брейк: Вибуло двоє через попередню нічию.",
+            "majority_decision": "Більшість вирішила долю групи.",
             "lang_changed": "✅ Мову змінено на: **Українська**",
             "game_over_clean": "Гру завершено. Створено нову сесію."
         },
@@ -78,7 +73,7 @@
             "hobbies": ["Полювання", "Риболовля", "Шахи", "Відеоігри", "Садівництво", "Стрільба", "Туризм", "Кулінарія", "Бокс", "Гітара", "Карти"],
             "inventory": ["Аптечка", "Ніж", "Надувний човен", "Насіння", "Протигаз", "Сокира", "Карта", "Рація", "Ліхтарик", "Компас", "Гвинтівка", "Каністра бензину", "Віскі", "Ноутбук", "Біблія"],
             "extra": ["Знає код бункера", "Пілот", "Вміє надавати допомогу", "Чорний пояс карате", "Каннібал", "Маніяк", "Вагітна", "Хоче дітей", "Чайлдфрі", "Веган", "Шпигун"],
-            "catastrophes": ["☢️ **Ядерна війна**", "🧟 **Зомбі-вірус**", "🤖 **Повстання ШІ**", "🌊 **Всесвітній потоп**", "☄️ **Падіння метеорита**"],
+            "catastrophes": ["☢️ Ядерна війна", "🧟 Зомбі-вірус", "🤖 Повстання ШІ", "🌊 Всесвітній потоп", "☄️ Падіння метеорита"],
             "bunker_types": ["🏚️ Старий бункер", "🔬 Лабораторія", "🚇 Метро", "🏠 Підвал", "💎 Елітний сховок"],
             "supplies": ["🍎 Їжі на 5 років", "🔫 Багато зброї", "💊 Є ліки", "🛠️ Є інструменти", "⚡ Потужний генератор"],
             "durations": ["1 рік", "5 років", "20 років", "Назавжди", "3 місяці"]
@@ -90,27 +85,27 @@
             "Він замерз на смерть, як тільки сіло сонце."
         ],
         "endings": {
-            "neutral": "\n😐 **НЕЙТРАЛЬНИЙ ФІНАЛ.** Буде важко, але є шанс."
+            "neutral": "🎉 **ВИЖИЛИ!**\n\nНезважаючи на всі труднощі, ви залишилися в бункері. Гермодвері зачинені, і тепер ваша спільна праця визначить майбутнє цивілізації. Буде важко, але ви разом."
         },
         "phobias": {
-            "Клаустрофобія": {"desc": "Страх замкнених просторів.", "risk": "– стрес у бункері"},
-            "Арахнофобія": {"desc": "Страх павуків.", "risk": "– крики демаскують"},
-            "Немає": {"desc": "Відсутність фобій.", "risk": "– стабільна психіка"}
+            "Клаустрофобія": {"desc": "Страх замкнених просторів.", "risk": "🎯 Стратегія: Може зашкодити моральному духу. Переконайте інших, що ви тримаєте себе в руках."},
+            "Арахнофобія": {"desc": "Страх павуків.", "risk": "⚠️ Ризик: В екстремальних умовах може викликати паніку."},
+            "Немає": {"desc": "Відсутність фобій.", "risk": "✅ Перевага: Залізна витримка в темних тунелях."}
         },
         "health": {
-            "Ідеально здоровий": {"desc": "Здоровий.", "risk": "– потенційний донор"},
-            "Астма": {"desc": "Астма.", "risk": "– треба інгалятор"},
-            "Туберкульоз": {"desc": "Інфекція.", "risk": "– ЗАРАЗНИЙ"}
+            "Ідеально здоровий": {"desc": "Здоровий.", "risk": "🎯 Стратегія: Ви ідеальний кандидат для тяжкої роботи та відтворення."},
+            "Астма": {"desc": "Астма.", "risk": "⚠️ Ризик: Потребує ліків, яких може не бути."},
+            "Туберкульоз": {"desc": "Інфекція.", "risk": "🚨 КРИТИЧНО: Ви несете загрозу всьому бункеру. Будьте готові до вигнання."}
         },
         "profile": {
             "title": "👤 Профіль: {name}",
-            "games": "🎮 Ігор",
+            "games": "🎮 Всього ігор",
             "wins": "🏆 Перемог",
-            "deaths": "💀 Смертей",
-            "winrate": "📊 Winrate",
-            "age": "🎂 Сер. вік",
-            "sex": "⚧ Стать",
-            "server_stats": "Всього ігор на цьому сервері: {count}"
+            "deaths": "💀 Вигнано разів",
+            "winrate": "📊 Відсоток виживання",
+            "age": "🎂 Сер. вік персонажа",
+            "sex": "🎭 Ролі (Ч/Ж)",
+            "server_stats": "Ігор на цьому сервері: {count}"
         },
         "modal": {
             "title": "Зміна псевдоніма",
@@ -121,16 +116,16 @@
     "en": {
         "name": "English",
         "phases": {
-            "waiting": "Waiting",
-            "reveal": "Reveal",
-            "voting": "Voting",
-            "finished": "Finished"
+            "waiting": "⌛ Waiting",
+            "reveal": "📢 Reveal Phase",
+            "voting": "🗳️ Voting Phase",
+            "finished": "🏁 Finished"
         },
         "ui": {
             "join_btn": "Join",
             "start_btn": "Start Game",
             "cancel_btn": "Cancel",
-            "vote_start_btn": "Start Voting",
+            "vote_start_btn": "👑 Start Voting",
             "end_vote_btn": "END VOTING",
             "profile_btn": "My Profile",
             "reveal_btn": "Reveal Card",
@@ -140,43 +135,43 @@
             "lobby_title": "☢️ Bunker: Lobby",
             "host_label": "👑 **Host:**",
             "players_label": "Players:",
-            "places_label": "Spots:",
-            "kick_label": "Exiled:",
+            "places_label": "✅ Safe Spots:",
+            "kick_label": "❌ Players to Exile:",
             "status_title": "📊 BUNKER STATUS",
             "vote_title": "🗳️ EXILE TIME",
             "vote_desc": "Choose who leaves the bunker.",
-            "vote_footer_double": "⚠️ DOUBLE ELIMINATION!",
-            "vote_placeholder": "Choose who to kick...",
-            "reveal_placeholder": "Choose stats",
+            "vote_footer_double": "⚠️ DOUBLE ELIMINATION: Vote for 2 players!",
+            "vote_placeholder": "Vote to eliminate...",
+            "reveal_placeholder": "What to reveal?",
             "guide_placeholder": "Select category",
             "reveal_all_opt": "⚠️ REVEAL ALL",
-            "reveal_all_desc": "All-in",
-            "win_title": "🎉 GAME OVER",
+            "reveal_all_desc": "Reveal all characteristics at once",
+            "win_title": "🎉 SURVIVORS!",
             "game_continue": "⚠️ GAME CONTINUES",
-            "game_continue_desc": "Keep revealing cards.",
+            "game_continue_desc": "Keep arguing and revealing cards.",
             "results_title": "🚪 RESULTS"
         },
         "msg": {
             "joined": "You joined!",
             "no_seats": "No seats left.",
             "game_started": "Game started.",
-            "game_cancelled": "❌ Game cancelled.",
-            "only_host": "❌ **Only Host!**",
-            "dead_vote": "Dead people don't vote!",
+            "game_cancelled": "❌ Game cancelled by Host.",
+            "only_host": "❌ **Only Host can do this!**",
+            "dead_vote": "💀 You have been exiled. The dead have no voice here.",
             "self_vote": "No self-voting!",
-            "vote_accepted": "✅ Vote accepted.",
-            "reveal_success": "✅ Revealed.",
-            "reveal_nothing": "Nothing new.",
+            "vote_accepted": "✅ Vote registered.",
+            "reveal_success": "✅ Characteristics revealed to the group.",
+            "reveal_nothing": "Nothing new to reveal.",
             "reveal_all_alert": "📢 **ALL CARDS REVEALED!**",
             "reveal_public_title": "📢 {name} reveals",
             "reveal_all_public_title": "📢 {name} all-in!",
-            "reveal_all_public_desc": "Revealed ALL!",
+            "reveal_all_public_desc": "Revealed EVERYTHING!",
             "name_changed": "✅ Name: **{name}**",
             "closed": "❌ Closed.",
             "draw": "⚖️ DRAW!",
-            "draw_desc": "No one leaves.\n\n🛑 **NEXT: DOUBLE ELIMINATION!**",
-            "crit_round": "⚠️ **Critical round.** Two exiled.",
-            "majority_decision": "Decision made.",
+            "draw_desc": "⚖️ Votes split. No one leaves.\n\n⚠️ **Tie Breaker: Two players will be eliminated next round!**",
+            "crit_round": "⚖️ Double Elimination: The tie must be broken.",
+            "majority_decision": "The group has made its decision.",
             "lang_changed": "✅ Language: **English**",
             "game_over_clean": "Game over."
         },
@@ -192,28 +187,41 @@
         },
         "data": {
             "sexes": ["Male", "Female"],
-            "bodies": ["Athletic", "Average", "Overweight"],
-            "jobs": ["Doctor", "Engineer", "Soldier", "Teacher", "Cook"],
-            "hobbies": ["Hunting", "Gaming", "Cooking"],
-            "inventory": ["Kit", "Knife", "Map", "Radio"],
-            "extra": ["Code", "Pilot", "Maniac"],
-            "catastrophes": ["☢️ **Nuclear War**", "🧟 **Zombies**"],
-            "bunker_types": ["🏚️ Old Bunker", "🔬 Lab"],
-            "supplies": ["🍎 Food", "🔫 Guns"],
-            "durations": ["1 year", "Forever"]
+            "bodies": ["Athletic", "Average", "Overweight", "Bodybuilder", "Skinny"],
+            "jobs": ["Doctor", "Engineer", "Soldier", "Teacher", "Cook", "Pilot", "Lawyer", "Farmer"],
+            "hobbies": ["Hunting", "Gaming", "Cooking", "Boxing", "Chess"],
+            "inventory": ["Kit", "Knife", "Map", "Radio", "Rifle", "Flashlight"],
+            "extra": ["Code", "Pilot", "Maniac", "Pregnant", "Spy"],
+            "catastrophes": ["☢️ Nuclear War", "🧟 Zombies", "🤖 AI Uprising", "🌊 Flood", "☄️ Meteor"],
+            "bunker_types": ["🏚️ Old Bunker", "🔬 Lab", "🚇 Metro"],
+            "supplies": ["🍎 Food for 5 years", "🔫 Weapons", "💊 Medicine", "⚡ Generator"],
+            "durations": ["1 year", "5 years", "Forever"]
         },
-        "kick_descriptions": ["Exiled to the wasteland."],
-        "endings": {"neutral": "Neutral ending."},
-        "phobias": {"None": {"desc": "None", "risk": "Stable"}},
-        "health": {"Healthy": {"desc": "Healthy", "risk": "Good"}},
+        "kick_descriptions": [
+            "Exiled to the wasteland.",
+            "Left behind to save supplies.",
+            "The group couldn't trust them.",
+            "Froze to death as the sun set."
+        ],
+        "endings": {
+            "neutral": "🎉 **THE BEYOND!**\n\nYou emerged as the chosen survivors. Your traits will be the foundation of a new era. Against all odds, you made it into the bunker."
+        },
+        "phobias": {
+            "Claustrophobia": {"desc": "Fear of enclosed spaces.", "risk": "🎯 Strategy: Others may see you as unstable. Argue your mental strength."},
+            "None": {"desc": "No phobias.", "risk": "✅ Benefit: Stable psyche during confinement."}
+        },
+        "health": {
+            "Healthy": {"desc": "Healthy.", "risk": "🎯 Strategy: You are a valuable physical asset."},
+            "Asthma": {"desc": "Respiratory issues.", "risk": "⚠️ Risk: Needs inhalers. High risk if supplies run low."}
+        },
         "profile": {
             "title": "👤 Profile: {name}",
-            "games": "🎮 Games",
-            "wins": "🏆 Wins",
-            "deaths": "💀 Deaths",
-            "winrate": "📊 Winrate",
-            "age": "🎂 Avg Age",
-            "sex": "⚧ Sex",
+            "games": "🎮 Total Games",
+            "wins": "🏆 Wins (Survived)",
+            "deaths": "💀 Times Eliminated",
+            "winrate": "📊 Survival Rate",
+            "age": "🎂 Avg Character Age",
+            "sex": "🎭 Role Distribution (M/F)",
             "server_stats": "Server Games: {count}"
         },
         "modal": {"title": "Change Name", "label": "Name", "placeholder": "Name"}
